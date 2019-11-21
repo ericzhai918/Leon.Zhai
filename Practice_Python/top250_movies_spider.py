@@ -18,7 +18,7 @@ def get_html_page(url):
 
 
 def get_info_from_page(htmlPage):
-    soup = BeautifulSoup(htmlPage,"lxml")
+    soup = BeautifulSoup(htmlPage, "lxml")
     movies = soup.find('ol', class_='grid_view').find_all('li')
     for i in range(0, 25):
         movieName = movies[i].find('span').string
@@ -28,6 +28,7 @@ def get_info_from_page(htmlPage):
                                                                                                class_='quote') else 'NaN'
         result.append([movieName, movieScore, movieRatingNum, movieQuote])
     return result
+
 
 def write_in_excel(result):
     book = xlwt.Workbook()
@@ -45,6 +46,6 @@ if '__main__':
     for i in get_url_list():
         htmlPage = get_html_page(i)
         result = get_info_from_page(htmlPage)
-    result.insert(0, ['电影名', '评分', '评价人数', '短评'])
 
+    result.insert(0, ['电影名', '评分', '评价人数', '短评'])
     write_in_excel(result)
