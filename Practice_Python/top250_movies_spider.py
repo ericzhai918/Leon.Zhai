@@ -29,6 +29,14 @@ def get_info_from_page(htmlPage):
         result.append([movieName, movieScore, movieRatingNum, movieQuote])
     return result
 
+def write_in_excel(result):
+    book = xlwt.Workbook()
+    sheet = book.add_sheet('movie_sheet')
+    for row in range(0, 251):
+        for col in range(0, 4):
+            sheet.write(row, col, result[row][col])
+    book.save('douban_top_250.xls')
+
 
 if '__main__':
     douban_list = []
@@ -39,10 +47,4 @@ if '__main__':
         result = get_info_from_page(htmlPage)
     result.insert(0, ['电影名', '评分', '评价人数', '短评'])
 
-    # 存入excel
-    book = xlwt.Workbook()
-    sheet = book.add_sheet('movie_sheet')
-    for row in range(0, 251):
-        for col in range(0, 4):
-            sheet.write(row, col, result[row][col])
-    book.save('douban_top_250.xls')
+    write_in_excel(result)
