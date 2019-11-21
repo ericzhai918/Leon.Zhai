@@ -1,4 +1,4 @@
-from Test__all__01 import *
+from Basic_Python.Test__all__01 import *
 
 hello()
 world()
