@@ -7,7 +7,7 @@ class pyZabbixApi(object):
         self.password = 'zabbix'
 
     def login(self):
-        zapi = ZabbixAPI("http://10.11.12.192/zabbix")
+        zapi = ZabbixAPI("http://10.xx.12.192/zabbix")
         zapi.login(self.user, self.password)
         return zapi
 
