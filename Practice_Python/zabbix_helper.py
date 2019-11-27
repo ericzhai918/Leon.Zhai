@@ -3,8 +3,9 @@ import xlwt
 import pandas as pd
 import os
 import platform
+import collections
 
-projectName= 'qqq'
+projectName= 'ECIF2019117'
 if platform.system() == 'Windows':
     SRC = "C:\\Users\\eric.zhai\\Desktop\\{}".format(projectName)
     DEST = "C:\\Users\\eric.zhai\\Desktop\\{}-new".format(projectName)
@@ -31,7 +32,7 @@ class pyZabbixApi(object):
         self.password = 'zabbix'
 
     def login(self):
-        zapi = ZabbixAPI("http://10.xx.12.192/zabbix")
+        zapi = ZabbixAPI("http://10.11.12.192/zabbix")
         zapi.login(self.user, self.password)
         return zapi
 
@@ -54,10 +55,10 @@ class pyZabbixApi(object):
         '''
         for host in hosts:
             items = zapi.item.get(hostids=host['hostid'],
-                                  output=['name', 'key_'])
+                                  output=['name', 'key_','status'])
             #存储主机List
             oneHostData = list()
-            oneHostData.append(['主机IP', '监控项ID', '监控项描述', '监控项键值', '触发器ID', '触发器表达式',
+            oneHostData.append(['主机IP', '监控项ID', '监控项描述', '监控项键值', '监控项停用与否','触发器ID', '触发器表达式',
                            '触发器描述', '告警等级','触发器停用与否'])
             for item in items:
                 triggers = zapi.trigger.get(itemids=item['itemid'], output=['expression',
@@ -68,10 +69,21 @@ class pyZabbixApi(object):
                 oneItemTriData.append(host['host'])
                 #存储一条监控项
                 oneItemData = list()
-                oneItemData.extend(list(item.values()))
+                orderedItem = collections.OrderedDict()
+                orderedItem['itemid'] = item['itemid']
+                orderedItem['name'] = item['name']
+                orderedItem['key_'] = item['key_']
+                orderedItem['status'] = item['status']
+                oneItemData.extend(list(orderedItem.values()))
 
                 for trigger in triggers:
-                    oneTriData = list(trigger.values())
+                    orderedTrigger = collections.OrderedDict()
+                    orderedTrigger['triggerid'] = trigger['triggerid']
+                    orderedTrigger['expression'] = trigger['expression']
+                    orderedTrigger['description'] = trigger['description']
+                    orderedTrigger['priority'] = trigger['priority']
+                    orderedTrigger['status'] = trigger['status']
+                    oneTriData = list(orderedTrigger.values())
                     oneItemTriDataTemp = oneItemTriData.copy()
                     oneItemDataTemp = oneItemData.copy()
                     oneItemDataTemp.extend(oneTriData)
@@ -99,30 +111,32 @@ def formatExcel(filepath):
     df=pd.read_excel(filepath)
 
     # 去除监控项键值列中的基础监控项
-    df = df[~ df['监控项键值'].str.contains('agent.hostname', case=False)]
-    df = df[~ df['监控项键值'].str.contains('agent.ping', case=False)]
-    df = df[~ df['监控项键值'].str.contains('agent.version', case=False)]
-    df = df[~ df['监控项键值'].str.contains('proc.num\[,,run\]', case=False)]
-    df = df[~ df['监控项键值'].str.contains('proc.num\[\]', case=False)]
-    df = df[~ df['监控项键值'].str.contains('system.cpu.load\[all,avg1\]', case=False)]
-    df = df[~ df['监控项键值'].str.contains('system.cpu.num', case=False)]
-    df = df[~ df['监控项键值'].str.contains('system.cpu.load\[all,avg5\]', case=False)]
-    df = df[~ df['监控项键值'].str.contains('system.cpu.util\[,idle\]', case=False)]
-    df = df[~ df['监控项键值'].str.contains('system.cpu.util\[,iowait\]', case=False)]
-    df = df[~ df['监控项键值'].str.contains('system.hostname', case=False)]
-    df = df[~ df['监控项键值'].str.contains('system.uname', case=False)]
-    df = df[~ df['监控项键值'].str.contains('system.uptime', case=False)]
-    df = df[~ df['监控项键值'].str.contains('vfs', case=False)]
-    df = df[~ df['监控项键值'].str.contains('vm.memory.size\[available\]', case=False)]
-    df = df[~ df['监控项键值'].str.contains('kernel.maxfiles', case=False)]
-    df = df[~ df['监控项键值'].str.contains('kernel.maxproc', case=False)]
+    df = df[~ df['监控项键值'].str.contains('agent.hostname', case='False')]
+    df = df[~ df['监控项键值'].str.contains('agent.ping', case='False')]
+    df = df[~ df['监控项键值'].str.contains('agent.version', case='False')]
+    df = df[~ df['监控项键值'].str.contains('proc.num\[,,run\]', case='False')]
+    df = df[~ df['监控项键值'].str.contains('proc.num\[\]', case='False')]
+    df = df[~ df['监控项键值'].str.contains('system.cpu.load\[all,avg1\]', case='False')]
+    df = df[~ df['监控项键值'].str.contains('system.cpu.num', case='False')]
+    df = df[~ df['监控项键值'].str.contains('system.cpu.load\[all,avg5\]', case='False')]
+    df = df[~ df['监控项键值'].str.contains('system.cpu.util\[,idle\]', case='False')]
+    df = df[~ df['监控项键值'].str.contains('system.cpu.util\[,iowait\]', case='False')]
+    df = df[~ df['监控项键值'].str.contains('system.hostname', case='False')]
+    df = df[~ df['监控项键值'].str.contains('system.uname', case='False')]
+    df = df[~ df['监控项键值'].str.contains('system.uptime', case='False')]
+    df = df[~ df['监控项键值'].str.contains('vfs', case='False')]
+    df = df[~ df['监控项键值'].str.contains('vm.memory.size\[available\]', case='False')]
+    df = df[~ df['监控项键值'].str.contains('kernel.maxfiles', case='False')]
+    df = df[~ df['监控项键值'].str.contains('kernel.maxproc', case='False')]
 
+    # 去除已停用的监控项
+    df = df[~df['监控项停用与否'].isin([1])]
     #去除已停用的触发器
     df=df[~df['触发器停用与否'].isin([1])]
     #去除无用列
     df = df.drop(['监控项ID'],axis=1)
     df = df.drop(['触发器ID'],axis=1)
-    df = df.drop(['触发器停用与否'],axis=1)
+    #df = df.drop(['触发器停用与否'],axis=1)
     # print(df)
     if platform.system() == 'Windows':
         fileName = filepath.split("\\")
@@ -135,7 +149,7 @@ def formatExcel(filepath):
 if __name__=='__main__':
     #zabbix组名
     zabbixGroupName = 'test'
-    projectName = 'qqq'
+    projectName = 'ECIF2019117'
     r = pyZabbixApi()
     zapi = r.login()
     group_id = r.getGroupIdByName(zapi, '{}'.format(zabbixGroupName))
