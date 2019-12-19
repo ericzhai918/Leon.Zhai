@@ -1,5 +1,5 @@
 import unittest
-
+import random
 
 def bubbleSort(arr):
     arrLen = len(arr)
@@ -48,6 +48,46 @@ def shellSort(arr):
         gap = gap // 2
     return arr
 
+
+def mergeSort(arr):
+    if (len(arr) < 2):
+        return arr
+    middle = len(arr) // 2
+    left, right = arr[:middle], arr[middle:]
+    return merge(mergeSort(left), mergeSort(right))
+
+
+def merge(left, right):
+    result = []
+    while left and right:
+        if left[0] <= right[0]:
+            result.append(left.pop(0))
+        else:
+            result.append(right.pop(0))
+    while left:
+        result.append(left.pop(0))
+    while right:
+        result.append(right.pop(0))
+    return result
+
+
+def quickSort(arr, left, right):
+    if left >= right:
+        return arr
+    key = arr[left]
+    low = left
+    high = right
+    while left < right:
+        while left < right and arr[right] >= key:
+            right -= 1
+        arr[left] = arr[right]
+        while left < right and arr[left] <= key:
+            left += 1
+        arr[right] = arr[left]
+    arr[right] = key
+    quickSort(arr, low, left - 1)
+    quickSort(arr, left + 1, high)
+    return arr
 
 class TestBubbleSortMethod(unittest.TestCase):
     def test_nulllist(self):
